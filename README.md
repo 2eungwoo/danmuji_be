@@ -1,20 +1,57 @@
+
+<!-- ------------------------ 배너 ------------------------ -->
+<!--
 <div align="center">
-  
-![danmuji_logo](https://github.com/user-attachments/assets/145ae7c2-fe19-42a2-8dbd-2e93c04d4371)
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:ffe17b,100:f5b041&height=180&text=Danmuji&animation=&fontColor=ffc107&fontSize=50" />
+</div>
+-->
+<!-- ------------------------ 로고 ------------------------ -->
+<hr/>
+<div align="center">
+  <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 10px;">
+    <img width="100" height="100" alt="danmuji_logo" src="https://github.com/user-attachments/assets/940cefc0-6ff2-4dbe-8ad7-d486b66b42d5" />
+    <h3>단무지 : 단계 별 무리없는 지원 시스템</h3>
+    <img src="https://img.shields.io/badge/기간-2025.05.14~2025.07.18-green?style=flat&logo=&logoColor=white" />
+  </div>
+</div>
+<hr/>
+<!-- [<img src="https://img.shields.io/badge/-readme.md-important?style=flat&logo=google-chrome&logoColor=white" />]()  [<img src="https://img.shields.io/badge/release-v1.0.0-yellow?style=flat&logo=google-chrome&logoColor=white" />]() -->
 
-### 🌙 단무지 - 단계 별 무리없는 지원 시스템
-
-[<img src="https://img.shields.io/badge/-readme.md-important?style=flat&logo=google-chrome&logoColor=white" />]()  [<img src="https://img.shields.io/badge/release-v1.0.0-yellow?style=flat&logo=google-chrome&logoColor=white" />]()
-<br/> [<img src="https://img.shields.io/badge/프로젝트 기간-2025.05.14~2025.07.18-green?style=flat&logo=&logoColor=white" />]()
-
-**단무지**는 웹 개발사와 고객사 간의 프로젝트 관리 전반에서 발생하는<br>비효율적인 커뮤니케이션과 데이터 관리 문제를 해결하기 위해 설계된 시스템입니다.
-
-프로젝트의 **계약 → 진행 → 납품 → 하자보수**까지 이어지는 모든 과정을 단계적으로 체계화하여<br>정보 누락, 불명확한 기록, 진행 혼란을 방지하고 양측이 **프로젝트 상황을 직관적으로 파악**할 수 있도록 지원합니다.
-
+<!-- ------------------------ 배너 + 설명 ------------------------ -->
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rounded&color=0:ffe17b,100:f5b041&height=180&text=Danmuji&animation=&fontColor=ffffff&fontSize=50" />
 </div>
 
+<div align="center">
+  <div align="center" style="max-width: 700px; line-height: 1.6;">
+    <p>
+      <strong><code>단무지</code></strong>는 기업에서 이루어지는 <strong>프로젝트 진행 관리를 돕는 웹 에이전시 서비스</strong>입니다.<br/>
+      개발사와 고객사 간 발생하는 산출물 관리, 문서 공유, 진행 상황, 업무 소통 같은 과정을 한 공간에서 통합 관리할 수 있게 해줍니다.<br/><br/>
+      <strong><code>단무지</code></strong>, 이 하나의 서비스로부터 계약 → 진행 → 납품 → 사후관리 등 전 과정을 효과적으로 처리하고,<br/>
+      기업 간 투명하면서도 뚜렷한 협업 환경에서 <strong>진정한 협업의 가치</strong>를 경험해보세요!
+    </p>
+  </div>
+</div>
+</br>
+</br>
+<!-- ------------------------ 주요 기능 ------------------------ -->
+</br>
 
-## ⚙️ 기능 소개
+## ✨ 주요 기능
+
+📊 권한 별 대시보드 & 프로젝트 관리 </br>
+✅ 게시글/체크리스트 기반 단계별 진행</br>
+💬 요청/답변 커뮤니티 및 커뮤니케이션 로그 </br>
+🔔 실시간 알림 (SSE) 및 멘션 기능</br>
+🗂️ 이력 관리 기반의 복구 시스템 및 파일 공유
+
+</div>
+</br>
+
+
+<!-- ------------------------ 움짤 ------------------------ -->
+## ⭐ 서비스 화면
+
 ### 대시보드
 > 관리자와 고객사, 개발사는 각각 전용 대시보드에서 시스템 사용 현황을 한 눈에 파악할 수 있습니다. 
 
@@ -88,8 +125,12 @@
 ![문의하기](https://github.com/user-attachments/assets/c3b26802-f163-4803-bc8e-78456facf766)
 ![문의답변하기](https://github.com/user-attachments/assets/101662b5-8682-460d-9368-a95c2d92a7a2)
 
+<!-- ------------------------ 링크 ------------------------ -->
 ## 📎배포 링크
 https://www.danmuji.site <br>
+> (운영기간 : ~ 2025.07.27)
+
+<!-- ------------------------ 계정 ------------------------ -->
 ### 🧪 테스트 계정
 | 역할  | ID                   | PW           |
 | --- | -------------------- | ------------ |
@@ -97,16 +138,10 @@ https://www.danmuji.site <br>
 | 개발사 | `devuser` | `devDanmuji11!!` |
 | 고객사 | `clientuser` | `clientDanmuji11!!` |
 
-## ✨ 주요 기능
-📊 프로젝트 대시보드 & 상태 관리  
-✅ 게시글/체크리스트 기반 단계별 진행  
-💬 요청/답변 커뮤니티 및 커뮤니케이션 로그  
-🔔 실시간 알림 (SSE) 및 멘션 기능  
-🗂️ 이력 관리, 사용자 권한 제어, 파일 첨부
+<!-- ------------------------ 기술 스택 ------------------------ -->
+## 🔨 사용 기술 스택
 
-## ⚙️ 사용 기술 스택
-
-**⚙ Backend**
+**🔥 Backend**
 <p> 
   <img alt="Spring Boot" src="https://img.shields.io/badge/SpringBoot-6DB33F.svg?&style=for-the-badge&logo=spring-boot&logoColor=white"/>
   <img alt="Spring Security" src="https://img.shields.io/badge/Security-00758F.svg?&style=for-the-badge&logo=springsecurity&logoColor=white"/> 
@@ -130,18 +165,19 @@ https://www.danmuji.site <br>
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-47A248.svg?&style=for-the-badge&logo=MongoDB&logoColor=white"/> 
 </p>
 
-**☁ Infra**
+**☁️ Infra**
 <p> 
   <img alt="AWS EC2" src="https://img.shields.io/badge/AWS EC2-FF9900.svg?&style=for-the-badge&logo=Amazon-AWS&logoColor=white"/>
   <img alt="Nginx" src="https://img.shields.io/badge/Nginx-009639.svg?&style=for-the-badge&logo=Nginx&logoColor=white"/> 
   <img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub Actions-2088FF.svg?&style=for-the-badge&logo=GitHub-Actions&logoColor=white"/> 
 </p>
 
+<!-- ------------------------ 아키텍처 ------------------------ -->
 ## 🛠️ 프로젝트 아키텍처
 <img width="1920" height="1080" alt="단무지아키텍처" src="https://github.com/user-attachments/assets/02599462-21f3-4400-a73d-dd41fe835ca4" />
 
+<!-- ------------------------ 실행 방법 ------------------------ -->
 ## 💻 실행 방법
-
 ### 🛠️ 사전 준비
 - Java 17
 - Node.js 18 
