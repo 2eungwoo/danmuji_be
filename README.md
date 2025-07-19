@@ -11,7 +11,8 @@
   <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 10px;">
     <img width="100" height="100" alt="danmuji_logo" src="https://github.com/user-attachments/assets/940cefc0-6ff2-4dbe-8ad7-d486b66b42d5" />
     <h3>단무지 : 단계 별 무리없는 지원 시스템</h3>
-    <img src="https://img.shields.io/badge/기간-2025.05.14~2025.07.18-green?style=flat&logo=&logoColor=white" />
+<!--     <img src="https://img.shields.io/badge/기간-2025.05.14~2025.07.18-ffe17b?style=flat&labelColor=5A3E1B" /> -->
+    <img src="https://img.shields.io/badge/기간-2025.05.14~2025.07.18-gray?style=flat&labelColor=green" />
   </div>
 </div>
 <hr/>
