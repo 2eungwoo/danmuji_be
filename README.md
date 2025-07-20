@@ -95,9 +95,11 @@
 ![파일다운로드](https://github.com/user-attachments/assets/0fba0d14-d265-476b-84e2-6feb45fa173c)
 
 > 프로젝트 내 참여하고 있는 다른 사용자를 멘션하여 빠르고 쉬운 의사 전달이 가능합니다.
+
 ![멘션기능](https://github.com/user-attachments/assets/6a040811-ce0b-4b07-b2a5-81739500d55f)
 
-> 로딩스피너가 귀엽게 잘 뽑혔습니다. 
+> 로딩스피너가 귀엽게 잘 뽑혔습니다.
+
 ![로딩스피너](https://github.com/user-attachments/assets/c330f75e-c44d-4511-bd3f-e44780230da6)
 
 > 체크리스트를 통해 담당자의 승인 절차 하에 단계별 필요한 업무 현황을 관리할 수 있습니다.
