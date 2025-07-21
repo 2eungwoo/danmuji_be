@@ -179,7 +179,8 @@ https://www.danmuji.site <br>
 
 <!-- ------------------------ 아키텍처 ------------------------ -->
 ## 🛠️ 프로젝트 아키텍처
-<img width="1920" height="1080" alt="단무지아키텍처" src="https://github.com/user-attachments/assets/02599462-21f3-4400-a73d-dd41fe835ca4" />
+<img width="1920" height="1080" alt="단무지아키텍쳐" src="https://github.com/user-attachments/assets/bd92e4b5-f831-41d1-9b56-11f4ba8aef01" />
+
 
 <!-- ------------------------ 실행 방법 ------------------------ -->
 ## 💻 실행 방법
