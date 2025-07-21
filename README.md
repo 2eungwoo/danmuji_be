@@ -208,8 +208,8 @@ git clone https://github.com/kernel360/KBE5_DANMUJI_FE.git
 
 2️⃣ 백엔드 실행 (Spring Boot)
 ```
-./gradlew build
-java -jar build/libs/danmuji-0.0.1-SNAPSHOT.jar
+./gradlew build -x test
+java -Dspring.profiles.active=dev -jar module-api/build/libs/danmuji.jar
 ```
 
 3️⃣ 프론트엔드 실행 (React)
