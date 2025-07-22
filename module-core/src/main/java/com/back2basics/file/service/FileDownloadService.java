@@ -43,6 +43,8 @@ public class FileDownloadService implements FileDownloadUseCase {
     @Override
     public FilePresignedUrlResult getPresignedDownloadUrl(Long userId, Long referenceId,
         Long fileId) {
+
+        fileValidator.validateDownloadPermission(userId, referenceId);
         File file = fileReadPort.getFileById(fileId);
 
         String fileKey = file.getFileKey();
