@@ -39,6 +39,9 @@ dependencies {
 
     // mongodb atlas
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    // retry
+    implementation 'org.springframework.retry:spring-retry'
 }
 
 def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile

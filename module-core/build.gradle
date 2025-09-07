@@ -15,6 +15,10 @@ dependencies {
     // module
     implementation project(':module-common')
 
+    // retry
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.retry:spring-retry'
+
 }
 
 bootJar {
