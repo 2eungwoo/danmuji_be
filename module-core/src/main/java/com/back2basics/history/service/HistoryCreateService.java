@@ -3,7 +3,7 @@ package com.back2basics.history.service;
 import com.back2basics.history.model.History;
 import com.back2basics.history.port.in.command.HistoryCreateCommand;
 import com.back2basics.history.port.out.HistoryCreatePort;
-import com.back2basics.notification.DiscordNotificationService;
+import com.back2basics.notification.port.out.NotificationPort;
 import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class HistoryCreateService {
 
     private final HistoryCreatePort historyCreatePort;
-    private final DiscordNotificationService discordNotificationService;
+    private final NotificationPort notificationPort;
 
     @Async
     @Retryable(
@@ -75,7 +75,7 @@ public class HistoryCreateService {
                 "- **커맨드**: `%s`",
             e.getMessage(), command.toString()
         );
-        discordNotificationService.sendNotification(errorMessage);
+        notificationPort.send(errorMessage);
     }
 
     @Recover
@@ -88,6 +88,6 @@ public class HistoryCreateService {
                 "- **삭제 여부**: `%b`",
             e.getMessage(), command.toString(), isDeleted
         );
-        discordNotificationService.sendNotification(errorMessage);
+        notificationPort.send(errorMessage);
     }
 }
