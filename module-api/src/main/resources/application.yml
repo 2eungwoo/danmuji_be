@@ -71,6 +71,10 @@ cloudflare:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL}
 ---
 spring:
   config:
