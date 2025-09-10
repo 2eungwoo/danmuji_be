@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,6 +49,7 @@ public class UpdateProjectService implements UpdateProjectUseCase {
     // PR 작성 : 수정 시 새로 등록된 유저의 경우 updateService 에서 create 해주는 게 맞는건지 의문
     @Override
     @Transactional
+    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void updateProject(Long projectId,
         ProjectUpdateCommand command, Long loggedInUserId) {
         userValidator.checkAdmin(loggedInUserId);
@@ -75,6 +77,7 @@ public class UpdateProjectService implements UpdateProjectUseCase {
     }
 
     @Override
+    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void changedStatus(Long projectId, Long loggedInUserId) {
         userValidator.checkAdmin(loggedInUserId);
         Project project = projectValidator.findById(projectId);
@@ -112,6 +115,7 @@ public class UpdateProjectService implements UpdateProjectUseCase {
     }
 
     @Override
+    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void updateDueSoonAndDelayedProjects() {
         List<Project> projects = readProjectPort.findUpdatableProjects();
         for (Project project : projects) {
