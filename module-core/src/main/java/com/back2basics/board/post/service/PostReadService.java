@@ -11,6 +11,7 @@ import com.back2basics.infra.validator.PostValidator;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class PostReadService implements PostReadUseCase {
     }
 
     @Override
+    @Cacheable(value = "dashboard:dueSoonPosts", key = "#userId")
     public List<PostDashboardReadResult> getPostsWithProjectIdAndDueSoon(Long userId) {
         return postReadPort.getPostsWithProjectIdAndDueSoon(userId).stream()
             .map(PostDashboardReadResult::toResult)
@@ -50,6 +52,7 @@ public class PostReadService implements PostReadUseCase {
     }
 
     @Override
+    @Cacheable(value = "dashboard:highPriorityPosts", key = "#userId")
     public List<PostDashboardReadResult> getHighPriorityPostsByUserId(Long userId) {
         return postReadPort.getHighPriorityPostsByUserId(userId).stream()
             .map(PostDashboardReadResult::toResult)
