@@ -9,6 +9,8 @@ import com.back2basics.history.service.HistoryLogService;
 import com.back2basics.infra.validator.PostValidator;
 import com.back2basics.infra.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,6 +25,10 @@ public class PostRestoreService implements PostRestoreUseCase {
 
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public void restorePost(Long requesterId, Long postId) {
         userValidator.isAdmin(requesterId);
         Post post = postValidator.isDeleted(postId);
