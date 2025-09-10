@@ -18,6 +18,7 @@ import com.back2basics.user.port.out.UserQueryPort;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,6 +38,7 @@ public class CreateProjectService implements CreateProjectUseCase {
 
     @Override
     @Transactional
+    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void createProject(ProjectCreateCommand command, Long loggedInUserId) {
 
         userValidator.checkAdmin(loggedInUserId);
