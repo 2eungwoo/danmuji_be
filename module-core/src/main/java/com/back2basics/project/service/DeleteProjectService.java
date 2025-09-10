@@ -8,6 +8,7 @@ import com.back2basics.project.model.Project;
 import com.back2basics.project.port.in.DeleteProjectUseCase;
 import com.back2basics.project.port.out.UpdateProjectPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +21,7 @@ public class DeleteProjectService implements DeleteProjectUseCase {
     private final HistoryLogService historyLogService;
 
     @Override
+    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void deleteProject(Long id, Long loggedInUserId) {
         userValidator.checkAdmin(loggedInUserId);
 
