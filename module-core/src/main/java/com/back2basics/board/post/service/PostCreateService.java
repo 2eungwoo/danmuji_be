@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,10 @@ public class PostCreateService implements PostCreateUseCase {
 
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public PostCreateResult createPost(Long userId, Long projectId, Long stepId,
         String userIp, PostCreateCommand command, List<MultipartFile> files) throws IOException {
 
@@ -29,6 +35,10 @@ public class PostCreateService implements PostCreateUseCase {
 
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public PostCreateResult createPostWithPresigned(Long userId, Long projectId, Long stepId,
         String userIp, PostCreateCommand command, List<PresignedUploadCompleteInfo> uploadedFiles) {
 
