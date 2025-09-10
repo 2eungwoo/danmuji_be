@@ -7,6 +7,8 @@ import com.back2basics.infra.s3.dto.PresignedUploadCompleteInfo;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,12 +19,20 @@ public class PostUpdateService implements PostUpdateUseCase {
     private final PostUpdateProcessor processor;
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public void updatePost(Long userId, String userIp, Long postId,
         PostUpdateCommand command, List<MultipartFile> files) throws IOException {
         processor.updateWithMultipart(userId, userIp, postId, command, files);
     }
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public void updatePostWithPresigned(Long userId, String userIp, Long postId,
         PostUpdateCommand command, List<PresignedUploadCompleteInfo> uploadedFiles) {
         processor.updateWithPresigned(userId, userIp, postId, command, uploadedFiles);
