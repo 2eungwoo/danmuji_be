@@ -8,6 +8,8 @@ import com.back2basics.history.service.HistoryLogService;
 import com.back2basics.infra.validator.PostValidator;
 import com.back2basics.infra.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +22,10 @@ public class PostDeleteService implements PostDeleteUseCase {
     private final UserValidator userValidator;
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
+        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
+    })
     public void softDeletePost(Long requesterId, Long postId) {
         Post post = postValidator.findPost(postId);
         if(!userValidator.isAdmin(requesterId)){
