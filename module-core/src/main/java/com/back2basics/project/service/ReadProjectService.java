@@ -22,6 +22,7 @@ import com.back2basics.user.model.UserType;
 import com.back2basics.user.port.out.UserQueryPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
