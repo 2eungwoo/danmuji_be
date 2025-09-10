@@ -101,6 +101,7 @@ public class ReadProjectService implements ReadProjectUseCase {
     }
 
     @Override
+    @Cacheable(value = "dashboard:projectStatusCount")
     public List<ProjectCountResult> getCountByProjectStatus() {
         List<StatusCountProjection> projections = readProjectPort.countProjectsByProjectStatus();
         return projections.stream().map(ProjectCountResult::toResult).toList();
