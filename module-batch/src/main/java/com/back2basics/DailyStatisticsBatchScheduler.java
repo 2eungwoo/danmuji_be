@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ProjectStatusBatchScheduler {
+public class DailyStatisticsBatchScheduler {
 
     private final JobLauncher jobLauncher;
-    private final Job projectStatusUpdateJob;
+    private final Job dailyStatisticsJob;
 
     @Scheduled(cron = "0 0 1 * * *")
     public void run() throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()
             .addLong("time", System.currentTimeMillis())
             .toJobParameters();
-        jobLauncher.run(projectStatusUpdateJob, jobParameters);
+        jobLauncher.run(dailyStatisticsJob, jobParameters);
     }
 }

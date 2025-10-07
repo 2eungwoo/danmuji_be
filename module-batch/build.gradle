@@ -12,6 +12,8 @@ dependencies {
     // starter
     implementation 'org.springframework.boot:spring-boot-starter-batch'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // jdbc
     runtimeOnly 'com.mysql:mysql-connector-j'

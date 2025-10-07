@@ -3,15 +3,13 @@ package com.back2basics.project.service;
 import com.back2basics.assignment.port.out.AssignmentQueryPort;
 import com.back2basics.company.model.CompanyType;
 import com.back2basics.company.port.out.ReadCompanyPort;
-import com.back2basics.global.cache.DashboardCacheService;
+import com.back2basics.global.config.CacheKeyProperties;
 import com.back2basics.infra.validator.ProjectValidator;
 import com.back2basics.infra.validator.UserValidator;
 import com.back2basics.project.model.Project;
 import com.back2basics.project.model.ProjectStatus;
-import com.back2basics.project.model.StatusCountProjection;
 import com.back2basics.project.port.in.ReadProjectUseCase;
 import com.back2basics.project.port.out.ReadProjectPort;
-import com.back2basics.project.service.result.ProjectClientUserResult;
 import com.back2basics.project.service.result.ProjectCountResult;
 import com.back2basics.project.service.result.ProjectDetailResult;
 import com.back2basics.project.service.result.ProjectGetResult;
@@ -21,13 +19,22 @@ import com.back2basics.project.service.result.ProjectStatusResult;
 import com.back2basics.user.model.Role;
 import com.back2basics.user.model.UserType;
 import com.back2basics.user.port.out.UserQueryPort;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReadProjectService implements ReadProjectUseCase {
@@ -38,7 +45,9 @@ public class ReadProjectService implements ReadProjectUseCase {
     private final UserQueryPort userQueryPort;
     private final ReadCompanyPort readCompanyPort;
     private final AssignmentQueryPort assignmentQueryPort;
-    private final DashboardCacheService dashboardCacheService;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+    private final CacheKeyProperties cacheKeyProperties;
 
     @Override
     public Page<ProjectListResult> getAllProjects(Pageable pageable) {
@@ -104,23 +113,31 @@ public class ReadProjectService implements ReadProjectUseCase {
     }
 
     @Override
-    @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(null, 'projectStatusCount')")
     public List<ProjectCountResult> getCountByProjectStatus() {
-        List<StatusCountProjection> projections = readProjectPort.countProjectsByProjectStatus();
-        return projections.stream().map(ProjectCountResult::toResult).toList();
+        String redisKey = cacheKeyProperties.getDashboard() + ":stats:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String jsonResult = redisTemplate.opsForValue().get(redisKey);
+
+        // rdb fallback을 위한 널처리
+        if (jsonResult == null) {
+            log.warn("데일리 통계 레디스에 없음 빈 리스트 반환, 키: {}.", redisKey);
+            return List.of();
+        }
+
+        try {
+            Map<String, Object> statsMap = objectMapper.readValue(jsonResult, new TypeReference<>() {});
+            return convertMapToProjectCountResult(statsMap);
+        } catch (IOException e) {
+            log.error("레디스 직렬화 실패 예외, 빈 리스트 반환", e);
+            return List.of();
+        }
     }
 
-    @Override
-    public List<ProjectClientUserResult> getClientUsersByProjectId(Long projectId) {
-        Project project = readProjectPort.findById(projectId);
-        return project.getAssignments().stream()
-            .filter(assignment -> assignment.getCompanyType().equals(CompanyType.CLIENT))
-            .map(assignment -> new ProjectClientUserResult(
-                assignment.getUserId(),
-                userQueryPort.findById(assignment.getUserId()).getName(),
-                userQueryPort.findById(assignment.getUserId()).getUsername(),
-                assignment.getCompanyId(),
-                assignment.getCompanyName()
-            )).toList();
+    private List<ProjectCountResult> convertMapToProjectCountResult(Map<String, Object> statsMap) {
+        List<ProjectCountResult> results = new ArrayList<>();
+        results.add(new ProjectCountResult(ProjectStatus.IN_PROGRESS, ((Number) statsMap.getOrDefault("inProgressCount", 0)).longValue()));
+        results.add(new ProjectCountResult(ProjectStatus.DUE_SOON, ((Number) statsMap.getOrDefault("dueSoonCount", 0)).longValue()));
+        results.add(new ProjectCountResult(ProjectStatus.DELAY, ((Number) statsMap.getOrDefault("delayCount", 0)).longValue()));
+        results.add(new ProjectCountResult(ProjectStatus.COMPLETED, ((Number) statsMap.getOrDefault("completedCount", 0)).longValue()));
+        return results;
     }
 }
