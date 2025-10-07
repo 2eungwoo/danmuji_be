@@ -6,9 +6,8 @@ import com.back2basics.board.post.service.utils.PostUpdateProcessor;
 import com.back2basics.infra.s3.dto.PresignedUploadCompleteInfo;
 import java.io.IOException;
 import java.util.List;
+import com.back2basics.global.cache.DashboardCacheService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,25 +16,22 @@ import org.springframework.web.multipart.MultipartFile;
 public class PostUpdateService implements PostUpdateUseCase {
 
     private final PostUpdateProcessor processor;
+    private final DashboardCacheService dashboardCacheService;
 
     @Override
-    @Caching(evict = {
-        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
-        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
-    })
     public void updatePost(Long userId, String userIp, Long postId,
         PostUpdateCommand command, List<MultipartFile> files) throws IOException {
         processor.updateWithMultipart(userId, userIp, postId, command, files);
+        dashboardCacheService.incrementVersion(userId, "dueSoonPosts");
+        dashboardCacheService.incrementVersion(userId, "highPriorityPosts");
     }
 
     @Override
-    @Caching(evict = {
-        @CacheEvict(value = "dashboard:dueSoonPosts", allEntries = true),
-        @CacheEvict(value = "dashboard:highPriorityPosts", allEntries = true)
-    })
     public void updatePostWithPresigned(Long userId, String userIp, Long postId,
         PostUpdateCommand command, List<PresignedUploadCompleteInfo> uploadedFiles) {
         processor.updateWithPresigned(userId, userIp, postId, command, uploadedFiles);
+        dashboardCacheService.incrementVersion(userId, "dueSoonPosts");
+        dashboardCacheService.incrementVersion(userId, "highPriorityPosts");
     }
 //
 //    private final PostUpdatePort postUpdatePort;
@@ -73,8 +69,6 @@ public class PostUpdateService implements PostUpdateUseCase {
 //
 //    private void replaceFiles(List<MultipartFile> files, List<Long> fileIdsToDelete, Long postId)
 //        throws IOException {
-//
-//        List<Long> finalFileIdsToDelete = (fileIdsToDelete != null) ? fileIdsToDelete : List.of();
 //
 //        List<File> existingFiles = fileReadPort.getFilesByReferenceId(postId);
 //
