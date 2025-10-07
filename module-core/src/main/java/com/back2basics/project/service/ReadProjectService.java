@@ -3,6 +3,7 @@ package com.back2basics.project.service;
 import com.back2basics.assignment.port.out.AssignmentQueryPort;
 import com.back2basics.company.model.CompanyType;
 import com.back2basics.company.port.out.ReadCompanyPort;
+import com.back2basics.global.cache.DashboardCacheService;
 import com.back2basics.infra.validator.ProjectValidator;
 import com.back2basics.infra.validator.UserValidator;
 import com.back2basics.project.model.Project;
@@ -37,6 +38,7 @@ public class ReadProjectService implements ReadProjectUseCase {
     private final UserQueryPort userQueryPort;
     private final ReadCompanyPort readCompanyPort;
     private final AssignmentQueryPort assignmentQueryPort;
+    private final DashboardCacheService dashboardCacheService;
 
     @Override
     public Page<ProjectListResult> getAllProjects(Pageable pageable) {
@@ -102,7 +104,7 @@ public class ReadProjectService implements ReadProjectUseCase {
     }
 
     @Override
-    @Cacheable(value = "dashboard:projectStatusCount")
+    @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(null, 'projectStatusCount')")
     public List<ProjectCountResult> getCountByProjectStatus() {
         List<StatusCountProjection> projections = readProjectPort.countProjectsByProjectStatus();
         return projections.stream().map(ProjectCountResult::toResult).toList();
