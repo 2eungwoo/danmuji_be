@@ -8,12 +8,16 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.back2basics.global.config.CacheKeyProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
 @SpringBootApplication(scanBasePackages = "com.back2basics")
 @EntityScan("com.back2basics")
 @EnableJpaRepositories(basePackages = "com.back2basics")
 @EnableMongoRepositories(basePackages = "com.back2basics")
 @EnableScheduling
 @EnableCaching
+@EnableConfigurationProperties(CacheKeyProperties.class)
 public class DanmujiApplication {
 
     public static void main(String[] args) {
