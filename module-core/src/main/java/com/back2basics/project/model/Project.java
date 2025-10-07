@@ -87,6 +87,10 @@ public class Project implements TargetDomain {
 //        calculateStatusByDate(command.getEndDate()); // 배치로 변경
     }
 
+    public void updateStatus(ProjectStatus newStatus) {
+        this.projectStatus = newStatus;
+    }
+
     public void statusCompleted() {
         this.projectStatus = ProjectStatus.COMPLETED;
     }
