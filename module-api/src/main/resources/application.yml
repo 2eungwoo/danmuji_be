@@ -56,6 +56,10 @@ jwt:
   access: ${JWT_ACCESS_EXPIRATION}
   refresh: ${JWT_REFRESH_EXPIRATION}
 
+cache:
+  key:
+    dashboard: "dashboard"
+
 server:
   forward-headers-strategy: native
 
