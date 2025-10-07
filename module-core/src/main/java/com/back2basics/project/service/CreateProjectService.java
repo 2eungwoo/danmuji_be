@@ -2,6 +2,7 @@ package com.back2basics.project.service;
 
 import com.back2basics.assignment.model.Assignment;
 import com.back2basics.assignment.service.notification.AssignmentNotificationSender;
+import com.back2basics.global.cache.DashboardCacheService;
 import com.back2basics.history.model.DomainType;
 import com.back2basics.history.service.HistoryLogService;
 import com.back2basics.infra.validator.UserValidator;
@@ -18,7 +19,6 @@ import com.back2basics.user.port.out.UserQueryPort;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,13 +32,13 @@ public class CreateProjectService implements CreateProjectUseCase {
     private final UserValidator userValidator;
     private final AssignmentNotificationSender assignmentNotificationSender;
     private final HistoryLogService historyLogService;
+    private final DashboardCacheService dashboardCacheService;
 
     private static final List<String> DEFAULT_STEPS =
         List.of("계약", "요구사항 정의", "화면설계", "개발", "검수", "수금");
 
     @Override
     @Transactional
-    @CacheEvict(value = "dashboard:projectStatusCount", allEntries = true)
     public void createProject(ProjectCreateCommand command, Long loggedInUserId) {
 
         userValidator.checkAdmin(loggedInUserId);
@@ -49,6 +49,8 @@ public class CreateProjectService implements CreateProjectUseCase {
 
         createDefaultSteps(savedProject.getId());
         assignUsers(savedProject, command);
+
+        dashboardCacheService.incrementVersion(null, "projectStatusCount");
     }
 
     private void createDefaultSteps(Long projectId) {
