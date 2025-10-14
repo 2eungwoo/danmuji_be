@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum GlobalErrorCode implements ErrorCode {
 
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "GEN001", "접근 권한이 없습니다."),
+    LOCK_ACQUISITION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "GEN002", "요청을 처리하는 중입니다. 잠시 후 다시 시도해주세요."),
     ;
 
     private final HttpStatus status;

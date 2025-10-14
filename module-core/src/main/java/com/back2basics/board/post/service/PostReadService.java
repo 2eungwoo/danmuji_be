@@ -46,6 +46,7 @@ public class PostReadService implements PostReadUseCase {
     }
 
     @Override
+    @PreventCacheStampede(cacheNames = "dashboard", key = "@dashboardCacheService.generateKey(#userId, 'dueSoonPosts')")
     @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(#userId, 'dueSoonPosts')")
     public List<PostDashboardReadResult> getPostsWithProjectIdAndDueSoon(Long userId) {
         return postReadPort.getPostsWithProjectIdAndDueSoon(userId).stream()
