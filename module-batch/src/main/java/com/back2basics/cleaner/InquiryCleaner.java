@@ -3,9 +3,8 @@ package com.back2basics.cleaner;
 import com.back2basics.SoftDeletableCleaner;
 import com.back2basics.adapter.persistence.inquiry.InquiryEntityRepository;
 import com.back2basics.adapter.persistence.inquiry.QInquiryEntity;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.ComparableExpressionBase;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,19 +24,22 @@ public class InquiryCleaner implements SoftDeletableCleaner {
     }
 
     @Override
-    public Function<JPAQueryFactory, Predicate> getPredicate(LocalDateTime threshold) {
-        return queryFactory -> QInquiryEntity.inquiryEntity.deletedAt.isNotNull()
-            .and(QInquiryEntity.inquiryEntity.deletedAt.before(threshold));
+    public NumberPath<Long> getIdPath() {
+        return QInquiryEntity.inquiryEntity.id;
     }
 
     @Override
-    public Function<JPAQueryFactory, OrderSpecifier<Long>> getOrderSpecifier() {
-        return queryFactory -> QInquiryEntity.inquiryEntity.id.asc();
+    public Function<Long, Long> getIdExtractor() {
+        return id -> id;
     }
 
     @Override
-    public Function<JPAQueryFactory, ComparableExpressionBase<Long>> getIdExpression() {
-        return queryFactory -> QInquiryEntity.inquiryEntity.id;
+    public Function<JPAQueryFactory, JPAQuery<Long>> getQueryFunction(LocalDateTime threshold) {
+        return queryFactory -> queryFactory
+            .select(QInquiryEntity.inquiryEntity.id)
+            .from(QInquiryEntity.inquiryEntity)
+            .where(QInquiryEntity.inquiryEntity.deletedAt.isNotNull()
+                .and(QInquiryEntity.inquiryEntity.deletedAt.before(threshold)));
     }
 
     @Override

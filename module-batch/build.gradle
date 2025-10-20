@@ -1,5 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+    id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10'
 }
 
 dependencies {
@@ -15,6 +17,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+
     // jdbc
     runtimeOnly 'com.mysql:mysql-connector-j'
 }
@@ -25,4 +31,23 @@ bootJar {
 
 jar {
     enabled = true
+}
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+querydsl {
+    jpa = true
+    querydslSourcesDir = querydslDir
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [ querydslDir ]
+        }
+    }
+}
+
+configurations {
+    querydsl.extendsFrom annotationProcessor
 }

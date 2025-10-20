@@ -1,72 +1,58 @@
 package com.back2basics.config;
 
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.ComparableExpressionBase;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManagerFactory;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
-import org.springframework.batch.item.database.AbstractPagingItemReader;
-import org.springframework.util.ClassUtils;
+import org.springframework.batch.item.ItemReader;
 
-public class QueryDslNoOffsetItemReader<ID extends Comparable> extends AbstractPagingItemReader<ID> {
+public class QueryDslNoOffsetItemReader<T> implements ItemReader<T> {
 
-    private final EntityManagerFactory entityManagerFactory;
-    private final Function<JPAQueryFactory, Predicate> whereClause;
-    private final Function<JPAQueryFactory, OrderSpecifier<ID>> orderSpecifier;
-    private final Function<JPAQueryFactory, ComparableExpressionBase<ID>> idExpression;
+    protected final JPAQueryFactory queryFactory;
+    private final int pageSize;
+    private final NumberPath<Long> idPath;
+    private final Function<T, Long> idExtractor;
+    private final Function<JPAQueryFactory, JPAQuery<T>> queryFunction;
+    private final Queue<T> results = new ConcurrentLinkedQueue<>();
+    private long currentId = 0L;
 
-    private ID lastId;
-
-    public QueryDslNoOffsetItemReader(EntityManagerFactory entityManagerFactory,
-                                      Function<JPAQueryFactory, Predicate> whereClause,
-                                      Function<JPAQueryFactory, OrderSpecifier<ID>> orderSpecifier,
-                                      Function<JPAQueryFactory, ComparableExpressionBase<ID>> idExpression,
-                                      int pageSize) {
-        this.entityManagerFactory = entityManagerFactory;
-        this.whereClause = whereClause;
-        this.orderSpecifier = orderSpecifier;
-        this.idExpression = idExpression;
-        setPageSize(pageSize);
-        setName(ClassUtils.getShortName(QueryDslNoOffsetItemReader.class));
+    public QueryDslNoOffsetItemReader(
+            JPAQueryFactory queryFactory,
+            int pageSize,
+            NumberPath<Long> idPath,
+            Function<T, Long> idExtractor,
+            Function<JPAQueryFactory, JPAQuery<T>> queryFunction
+    ) {
+        this.queryFactory = queryFactory;
+        this.pageSize = pageSize;
+        this.idPath = idPath;
+        this.idExtractor = idExtractor;
+        this.queryFunction = queryFunction;
     }
 
     @Override
-    protected void doReadPage() {
-        if (results == null) {
-            results = new ArrayList<>();
-        } else {
-            results.clear();
+    public T read() {
+        if (results.isEmpty()) {
+            fetch();
         }
+        return results.poll();
+    }
 
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
+    protected void fetch() {
+        JPAQuery<T> query = queryFunction.apply(queryFactory);
 
-        List<ID> fetchedIds = queryFactory.select(idExpression.apply(queryFactory))
-            .from(idExpression.apply(queryFactory).getMetadata().getParent()) // This gets the QEntity path
-            .where(whereClause.apply(queryFactory), lastId != null ? idExpression.apply(queryFactory).gt(lastId) : null)
-            .orderBy(orderSpecifier.apply(queryFactory))
-            .limit(getPageSize())
-            .fetch();
+        List<T> resultList = query
+                .where(idPath.gt(currentId))
+                .orderBy(idPath.asc())
+                .limit(pageSize)
+                .fetch();
 
-        results.addAll(fetchedIds);
-
-        if (!results.isEmpty()) {
-            lastId = results.get(results.size() - 1);
+        if (!resultList.isEmpty()) {
+            results.addAll(resultList);
+            currentId = idExtractor.apply(resultList.get(resultList.size() - 1));
         }
-
-        entityManager.close();
-    }
-
-    @Override
-    protected void doJumpToPage(int itemIndex) {
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        super.afterPropertiesSet();
     }
 }

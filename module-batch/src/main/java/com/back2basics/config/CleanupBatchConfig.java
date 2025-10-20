@@ -22,9 +22,8 @@ public class CleanupBatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final EntityManagerFactory entityManagerFactory;
-    private final List<SoftDeletableCleaner> cleaners;
     private final JPAQueryFactory jpaQueryFactory;
+    private final List<SoftDeletableCleaner> cleaners;
 
     private static final int CHUNK_SIZE = 1000;
 
@@ -52,11 +51,11 @@ public class CleanupBatchConfig {
     private QueryDslNoOffsetItemReader<Long> cleanupItemReader(SoftDeletableCleaner cleaner) {
         LocalDateTime threshold = LocalDateTime.now().minusDays(30);
         return new QueryDslNoOffsetItemReader<>(
-            entityManagerFactory,
-            cleaner.getPredicate(threshold),
-            cleaner.getOrderSpecifier(),
-            cleaner.getIdExpression(),
-            CHUNK_SIZE
+            jpaQueryFactory,
+            CHUNK_SIZE,
+            cleaner.getIdPath(),
+            cleaner.getIdExtractor(),
+            cleaner.getQueryFunction(threshold)
         );
     }
 

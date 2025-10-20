@@ -8,6 +8,8 @@ import com.back2basics.project.port.out.ReadProjectPort;
 import com.back2basics.adapter.persistence.project.ProjectEntity;
 import com.back2basics.adapter.persistence.project.QProjectEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,12 +74,13 @@ public class BatchConfig {
     @Bean
     public QueryDslNoOffsetItemReader<ProjectEntity> projectEntityNoOffsetReader() {
         return new QueryDslNoOffsetItemReader<>(
-            entityManagerFactory,
-            queryFactory -> QProjectEntity.projectEntity.isDeleted.isFalse(),
-            queryFactory -> QProjectEntity.projectEntity.id.asc(),
-            queryFactory -> QProjectEntity.projectEntity.id,
-            ProjectEntity.class,
-            CHUNK_SIZE
+            jpaQueryFactory,
+            CHUNK_SIZE,
+            QProjectEntity.projectEntity.id,
+            ProjectEntity::getId,
+            queryFactory -> queryFactory
+                .selectFrom(QProjectEntity.projectEntity)
+                .where(QProjectEntity.projectEntity.isDeleted.isFalse())
         );
     }
 
@@ -127,10 +130,10 @@ public class BatchConfig {
             DailyStatisticsEntity entity = DailyStatisticsEntity.builder()
                 .statDate(LocalDate.now())
                 .totalCount(total)
-                .inProgressCount(counts.getOrDefault(ProjectStatus.IN_PROGRESS, 0L))
-                .dueSoonCount(counts.getOrDefault(ProjectStatus.DUE_SOON, 0L))
-                .delayCount(counts.getOrDefault(ProjectStatus.DELAY, 0L))
-                .completedCount(counts.getOrDefault(ProjectStatus.COMPLETED, 0L))
+                .inProgressCount(counts.getOrDefault(ProjectStatus.IN_PROGRESS, 0L)))
+                .dueSoonCount(counts.getOrDefault(ProjectStatus.DUE_SOON, 0L)))
+                .delayCount(counts.getOrDefault(ProjectStatus.DELAY, 0L)))
+                .completedCount(counts.getOrDefault(ProjectStatus.COMPLETED, 0L)))
                 .build();
 
             dailyStatisticsRepository.save(entity);
