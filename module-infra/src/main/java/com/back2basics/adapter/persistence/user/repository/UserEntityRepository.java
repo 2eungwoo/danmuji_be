@@ -10,9 +10,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface UserEntityRepository extends JpaRepository<UserEntity, Long>,
@@ -20,9 +22,6 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, Long>,
 
     boolean existsByUsername(String username);
 
-    // 영속계층에 내려오기 전 서비스레이어에서 validator에 의한 옵셔널 체크를 하면 되니 여기서 옵셔널을 쓰지 않아도 될것같습니다
-    // 추가로 이렇게 하면 멘토님 말씀대로 서비스레이어에서 비즈니스 로직에 의한 예외처리가 가능해집니다.
-    // (repository.find 의 결과가 Optional이면 port쪽에서 찾아줄때 예외를 잡아줘야함)
     Optional<UserEntity> findByUsername(String username);
 
     @Query("select u.id from UserEntity u where u.name = :name")
@@ -54,4 +53,9 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, Long>,
     void deleteByDeletedAtBefore(LocalDateTime threshold);
 
     void deleteAllByCompanyIdIn(List<Long> deletedCompanyIds);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserEntity u WHERE u.id IN :ids")
+    void bulkDeleteByIds(@Param("ids") List<Long> ids);
 }

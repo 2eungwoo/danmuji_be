@@ -2,35 +2,46 @@ package com.back2basics.cleaner;
 
 import com.back2basics.SoftDeletableCleaner;
 import com.back2basics.adapter.persistence.company.CompanyEntityRepository;
-import com.back2basics.adapter.persistence.user.repository.UserEntityRepository;
+import com.back2basics.adapter.persistence.company.QCompanyEntity;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class CompanyCleaner implements SoftDeletableCleaner {
 
     private final CompanyEntityRepository repository;
-    private final UserEntityRepository userEntityRepository;
-
-    @Override
-    public void clean(LocalDateTime threshold) {
-        // 1. 삭제 대상 회사 목록 조회
-        List<Long> deletedCompanyIds = repository.findIdsByDeletedAtBefore(threshold);
-
-        if (!deletedCompanyIds.isEmpty()) {
-            // 2. 해당 회사에 소속된 사용자 삭제
-            userEntityRepository.deleteAllByCompanyIdIn(deletedCompanyIds);
-
-            // 3. 회사 삭제
-            repository.deleteByIdIn(deletedCompanyIds);
-        }
-    }
 
     @Override
     public String getName() {
         return "Company";
+    }
+
+    @Override
+    public Function<JPAQueryFactory, Predicate> getPredicate(LocalDateTime threshold) {
+        return queryFactory -> QCompanyEntity.companyEntity.deletedAt.isNotNull()
+            .and(QCompanyEntity.companyEntity.deletedAt.before(threshold));
+    }
+
+    @Override
+    public Function<JPAQueryFactory, OrderSpecifier<Long>> getOrderSpecifier() {
+        return queryFactory -> QCompanyEntity.companyEntity.id.asc();
+    }
+
+    @Override
+    public Function<JPAQueryFactory, ComparableExpressionBase<Long>> getIdExpression() {
+        return queryFactory -> QCompanyEntity.companyEntity.id;
+    }
+
+    @Override
+    public void bulkDelete(List<Long> ids) {
+        repository.deleteByIdIn(ids);
     }
 }
