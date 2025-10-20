@@ -93,12 +93,9 @@ public class BatchConfig {
     public ItemWriter<ProjectStatus> redisAggregationWriter() {
         return items -> {
             String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-            redisTemplate.executePipelined((RedisTemplate.RedisCallback<Object>) connection -> {
-                for (ProjectStatus status : items) {
-                    connection.hashCommands().hIncrBy(todayKey.getBytes(), status.name().getBytes(), 1L);
-                }
-                return null;
-            });
+            for (ProjectStatus status : items) {
+                redisTemplate.opsForHash().increment(todayKey, status.name(), 1L);
+            }
             redisTemplate.expire(todayKey, 2, TimeUnit.DAYS);
         };
     }
