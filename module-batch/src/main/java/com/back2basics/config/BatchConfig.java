@@ -4,14 +4,19 @@ import com.back2basics.adapter.persistence.statistics.entity.DailyStatisticsEnti
 import com.back2basics.adapter.persistence.statistics.repository.DailyStatisticsRepository;
 import com.back2basics.global.config.CacheKeyProperties;
 import com.back2basics.project.model.ProjectStatus;
-import com.back2basics.project.model.StatusCountProjection;
 import com.back2basics.project.port.out.ReadProjectPort;
+import com.back2basics.adapter.persistence.project.ProjectEntity;
+import com.back2basics.adapter.persistence.project.QProjectEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -20,6 +25,8 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,34 +45,85 @@ public class BatchConfig {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final CacheKeyProperties cacheKeyProperties;
+    private final EntityManagerFactory entityManagerFactory;
+    private final JPAQueryFactory jpaQueryFactory;
+
+    private static final int CHUNK_SIZE = 1000;
+    private static final String REDIS_AGGREGATION_KEY_PREFIX = "daily_stats_agg:";
 
     @Bean
     public Job dailyStatisticsJob() {
         return new JobBuilder("dailyStatisticsJob", jobRepository)
-            .start(dailyStatisticsStep())
+            .start(readProjectsAndAggregateInRedisStep())
+            .next(finalizeDailyStatisticsStep())
             .build();
     }
 
     @Bean
-    public Step dailyStatisticsStep() {
-        return new StepBuilder("dailyStatisticsStep", jobRepository)
-            .tasklet(dailyStatisticsTasklet(), transactionManager)
+    public Step readProjectsAndAggregateInRedisStep() {
+        return new StepBuilder("readProjectsAndAggregateInRedisStep", jobRepository)
+            .<ProjectEntity, ProjectStatus>chunk(CHUNK_SIZE, transactionManager)
+            .reader(projectEntityNoOffsetReader())
+            .processor(projectStatusProcessor())
+            .writer(redisAggregationWriter())
             .build();
     }
 
     @Bean
-    public Tasklet dailyStatisticsTasklet() {
+    public QueryDslNoOffsetItemReader<ProjectEntity> projectEntityNoOffsetReader() {
+        return new QueryDslNoOffsetItemReader<>(
+            entityManagerFactory,
+            queryFactory -> QProjectEntity.projectEntity.isDeleted.isFalse(),
+            queryFactory -> QProjectEntity.projectEntity.id.asc(),
+            queryFactory -> QProjectEntity.projectEntity.id,
+            ProjectEntity.class,
+            CHUNK_SIZE
+        );
+    }
+
+    @Bean
+    public ItemProcessor<ProjectEntity, ProjectStatus> projectStatusProcessor() {
+        return project -> project.getProjectStatus();
+    }
+
+    @Bean
+    public ItemWriter<ProjectStatus> redisAggregationWriter() {
+        return items -> {
+            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            redisTemplate.executePipelined((RedisTemplate.RedisCallback<Object>) connection -> {
+                for (ProjectStatus status : items) {
+                    connection.hashCommands().hIncrBy(todayKey.getBytes(), status.name().getBytes(), 1L);
+                }
+                return null;
+            });
+            redisTemplate.expire(todayKey, 2, TimeUnit.DAYS);
+        };
+    }
+
+    @Bean
+    public Step finalizeDailyStatisticsStep() {
+        return new StepBuilder("finalizeDailyStatisticsStep", jobRepository)
+            .tasklet(finalizeDailyStatisticsTasklet(), transactionManager)
+            .build();
+    }
+
+    @Bean
+    public Tasklet finalizeDailyStatisticsTasklet() {
         return (contribution, chunkContext) -> {
-            log.info("====== 데일리 통계 배치 시작 ======");
+            log.info("====== 데일리 통계 배치 최종 집계 시작 ======");
 
-            // RDB에서 데이터 집계
-            List<StatusCountProjection> projections = readProjectPort.countProjectsByProjectStatus();
-            Map<ProjectStatus, Long> counts = projections.stream()
-                .collect(Collectors.toMap(StatusCountProjection::getProjectStatus, StatusCountProjection::getCount));
+            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            Map<Object, Object> rawCounts = redisTemplate.opsForHash().entries(todayKey);
 
-            long total = counts.values().stream().mapToLong(Long::longValue).sum();
+            Map<ProjectStatus, Long> counts = new HashMap<>();
+            long total = 0L;
+            for (Map.Entry<Object, Object> entry : rawCounts.entrySet()) {
+                ProjectStatus status = ProjectStatus.valueOf(entry.getKey().toString());
+                Long count = Long.valueOf(entry.getValue().toString());
+                counts.put(status, count);
+                total += count;
+            }
 
-            // 2. 엔티티 생성
             DailyStatisticsEntity entity = DailyStatisticsEntity.builder()
                 .statDate(LocalDate.now())
                 .totalCount(total)
@@ -78,11 +136,12 @@ public class BatchConfig {
             dailyStatisticsRepository.save(entity);
             log.info("통계 데이터 RDB에 저장: {}", entity.getStatDate());
 
-            // 레디스에 저장
-            String redisKey = cacheKeyProperties.getDashboard() + ":stats:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String redisCacheKey = cacheKeyProperties.getDashboard() + ":stats:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             String jsonResult = objectMapper.writeValueAsString(entity);
-            redisTemplate.opsForValue().set(redisKey, jsonResult);
-            log.info("====== 통계 데이터 레디스에 저장, 키: {}", redisKey);
+            redisTemplate.opsForValue().set(redisCacheKey, jsonResult);
+            log.info("====== 통계 데이터 레디스에 저장, 키: {}", redisCacheKey);
+
+            redisTemplate.delete(todayKey);
 
             return RepeatStatus.FINISHED;
         };
