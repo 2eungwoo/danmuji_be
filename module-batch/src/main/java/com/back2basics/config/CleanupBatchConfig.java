@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.job.builder.SimpleJobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
@@ -33,10 +34,15 @@ public class CleanupBatchConfig {
             .map(this::buildCleanupStepForCleaner)
             .toArray(Step[]::new);
 
-        return jobBuilder
-            .start(steps[0])
-            .next(steps)
-            .build();
+        if (steps.length == 0) {
+            return jobBuilder.start(new StepBuilder("noOpStep", jobRepository).tasklet((contribution, chunkContext) -> null, transactionManager).build()).build();
+        }
+
+        SimpleJobBuilder simpleJobBuilder = jobBuilder.start(steps[0]);
+        for (int i = 1; i < steps.length; i++) {
+            simpleJobBuilder.next(steps[i]);
+        }
+        return simpleJobBuilder.build();
     }
 
     private Step buildCleanupStepForCleaner(SoftDeletableCleaner cleaner) {
@@ -59,6 +65,6 @@ public class CleanupBatchConfig {
     }
 
     private ItemWriter<Long> cleanupItemWriter(SoftDeletableCleaner cleaner) {
-        return items -> cleaner.bulkDelete(items);
+        return items -> cleaner.bulkDelete((List<Long>) items.getItems());
     }
 }

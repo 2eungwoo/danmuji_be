@@ -46,4 +46,9 @@ public class PostCleaner implements SoftDeletableCleaner {
     public void bulkDelete(List<Long> ids) {
         repository.bulkDeleteByIds(ids);
     }
+
+    @Override
+    public void clean(LocalDateTime threshold) {
+        repository.deleteByDeletedAtBefore(threshold);
+    }
 }

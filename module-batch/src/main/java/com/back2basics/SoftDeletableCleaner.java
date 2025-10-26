@@ -12,8 +12,12 @@ public interface SoftDeletableCleaner {
     String getName();
 
     NumberPath<Long> getIdPath();
+
     Function<Long, Long> getIdExtractor();
+
     Function<JPAQueryFactory, JPAQuery<Long>> getQueryFunction(LocalDateTime threshold);
-    
+
     void bulkDelete(List<Long> ids);
+
+    void clean(LocalDateTime threshold);
 }
