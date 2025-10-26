@@ -10,6 +10,7 @@ import com.back2basics.project.model.Project;
 import com.back2basics.project.model.ProjectStatus;
 import com.back2basics.project.port.in.ReadProjectUseCase;
 import com.back2basics.project.port.out.ReadProjectPort;
+import com.back2basics.project.service.result.ProjectClientUserResult;
 import com.back2basics.project.service.result.ProjectCountResult;
 import com.back2basics.project.service.result.ProjectDetailResult;
 import com.back2basics.project.service.result.ProjectGetResult;
@@ -139,5 +140,11 @@ public class ReadProjectService implements ReadProjectUseCase {
         results.add(new ProjectCountResult(ProjectStatus.DELAY, ((Number) statsMap.getOrDefault("delayCount", 0)).longValue()));
         results.add(new ProjectCountResult(ProjectStatus.COMPLETED, ((Number) statsMap.getOrDefault("completedCount", 0)).longValue()));
         return results;
+    }
+
+    @Override
+    public List<ProjectClientUserResult> getClientUsersByProjectId(Long projectId) {
+        // todo: redis에 저장된 클라이언트 유저 리스트를 읽어와서 반환하느느 쿼리 작성
+        return null;
     }
 }

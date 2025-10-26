@@ -167,6 +167,16 @@ public class Project implements TargetDomain {
         return status;
     }
 
+    public static Project fromUpdateCommand(ProjectUpdateCommand command) {
+        return Project.builder()
+            .name(command.getName())
+            .description(command.getDescription())
+            .projectCost(command.getProjectCost())
+            .startDate(command.getStartDate())
+            .endDate(command.getEndDate())
+            .build();
+    }
+
     public static Project copyOf(Project project) {
         return Project.builder()
             .id(project.getId())

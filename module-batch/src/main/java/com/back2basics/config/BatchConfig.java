@@ -1,24 +1,20 @@
 package com.back2basics.config;
 
+import com.back2basics.adapter.persistence.project.ProjectEntity;
+import com.back2basics.adapter.persistence.project.QProjectEntity;
 import com.back2basics.adapter.persistence.statistics.entity.DailyStatisticsEntity;
 import com.back2basics.adapter.persistence.statistics.repository.DailyStatisticsRepository;
 import com.back2basics.global.config.CacheKeyProperties;
 import com.back2basics.project.model.ProjectStatus;
 import com.back2basics.project.port.out.ReadProjectPort;
-import com.back2basics.adapter.persistence.project.ProjectEntity;
-import com.back2basics.adapter.persistence.project.QProjectEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.core.types.dsl.NumberPath;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import javax.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -92,7 +88,8 @@ public class BatchConfig {
     @Bean
     public ItemWriter<ProjectStatus> redisAggregationWriter() {
         return items -> {
-            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
             for (ProjectStatus status : items) {
                 redisTemplate.opsForHash().increment(todayKey, status.name(), 1L);
             }
@@ -112,7 +109,8 @@ public class BatchConfig {
         return (contribution, chunkContext) -> {
             log.info("====== 데일리 통계 배치 최종 집계 시작 ======");
 
-            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
             Map<Object, Object> rawCounts = redisTemplate.opsForHash().entries(todayKey);
 
             Map<ProjectStatus, Long> counts = new HashMap<>();
@@ -127,16 +125,17 @@ public class BatchConfig {
             DailyStatisticsEntity entity = DailyStatisticsEntity.builder()
                 .statDate(LocalDate.now())
                 .totalCount(total)
-                .inProgressCount(counts.getOrDefault(ProjectStatus.IN_PROGRESS, 0L)))
-                .dueSoonCount(counts.getOrDefault(ProjectStatus.DUE_SOON, 0L)))
-                .delayCount(counts.getOrDefault(ProjectStatus.DELAY, 0L)))
-                .completedCount(counts.getOrDefault(ProjectStatus.COMPLETED, 0L)))
+                .inProgressCount(counts.getOrDefault(ProjectStatus.IN_PROGRESS, 0L))
+                .dueSoonCount(counts.getOrDefault(ProjectStatus.DUE_SOON, 0L))
+                .delayCount(counts.getOrDefault(ProjectStatus.DELAY, 0L))
+                .completedCount(counts.getOrDefault(ProjectStatus.COMPLETED, 0L))
                 .build();
 
             dailyStatisticsRepository.save(entity);
             log.info("통계 데이터 RDB에 저장: {}", entity.getStatDate());
 
-            String redisCacheKey = cacheKeyProperties.getDashboard() + ":stats:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String redisCacheKey = cacheKeyProperties.getDashboard() + ":stats:" + LocalDate.now()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
             String jsonResult = objectMapper.writeValueAsString(entity);
             redisTemplate.opsForValue().set(redisCacheKey, jsonResult);
             log.info("====== 통계 데이터 레디스에 저장, 키: {}", redisCacheKey);
