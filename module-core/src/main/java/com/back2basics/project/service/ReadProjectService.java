@@ -4,6 +4,7 @@ import com.back2basics.assignment.port.out.AssignmentQueryPort;
 import com.back2basics.company.model.CompanyType;
 import com.back2basics.company.port.out.ReadCompanyPort;
 import com.back2basics.global.config.CacheKeyProperties;
+import com.back2basics.global.cache.DashboardCacheService;
 import com.back2basics.infra.validator.ProjectValidator;
 import com.back2basics.infra.validator.UserValidator;
 import com.back2basics.project.model.Project;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -49,6 +51,7 @@ public class ReadProjectService implements ReadProjectUseCase {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final CacheKeyProperties cacheKeyProperties;
+    private final DashboardCacheService dashboardCacheService;
 
     @Override
     public Page<ProjectListResult> getAllProjects(Pageable pageable) {
@@ -85,6 +88,7 @@ public class ReadProjectService implements ReadProjectUseCase {
     }
 
     @Override
+    @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(#userId, 'userProjectsByStatus')")
     public List<ProjectStatusResult> findProjectByStatus(Long userId, Role role,
         ProjectStatus status) {
         List<Project> projects;

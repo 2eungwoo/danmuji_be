@@ -46,7 +46,6 @@ public class PostReadService implements PostReadUseCase {
     }
 
     @Override
-    @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(#userId, 'dueSoonPosts')")
     public List<PostDashboardReadResult> getPostsWithProjectIdAndDueSoon(Long userId) {
         return postReadPort.getPostsWithProjectIdAndDueSoon(userId).stream()
             .map(PostDashboardReadResult::toResult)
@@ -54,7 +53,6 @@ public class PostReadService implements PostReadUseCase {
     }
 
     @Override
-    @Cacheable(value = "dashboard", key = "@dashboardCacheService.generateKey(#userId, 'highPriorityPosts')")
     public List<PostDashboardReadResult> getHighPriorityPostsByUserId(Long userId) {
         return postReadPort.getHighPriorityPostsByUserId(userId).stream()
             .map(PostDashboardReadResult::toResult)
