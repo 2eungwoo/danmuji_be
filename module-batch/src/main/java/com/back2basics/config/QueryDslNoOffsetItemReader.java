@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import org.springframework.batch.item.ItemReader;
 
+// 구현 참고 블로그 : https://jojoldu.tistory.com/473
 public class QueryDslNoOffsetItemReader<T> implements ItemReader<T> {
 
     protected final JPAQueryFactory queryFactory;
