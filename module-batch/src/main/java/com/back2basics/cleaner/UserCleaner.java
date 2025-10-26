@@ -1,8 +1,8 @@
 package com.back2basics.cleaner;
 
 import com.back2basics.SoftDeletableCleaner;
-import com.back2basics.adapter.persistence.user.repository.UserEntityRepository;
 import com.back2basics.adapter.persistence.user.entity.QUserEntity;
+import com.back2basics.adapter.persistence.user.repository.UserEntityRepository;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -45,5 +45,10 @@ public class UserCleaner implements SoftDeletableCleaner {
     @Override
     public void bulkDelete(List<Long> ids) {
         repository.bulkDeleteByIds(ids);
+    }
+
+    @Override
+    public void clean(LocalDateTime threshold) {
+        repository.deleteByDeletedAtBefore(threshold);
     }
 }

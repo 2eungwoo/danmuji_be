@@ -46,4 +46,12 @@ public class ProjectCleaner implements SoftDeletableCleaner {
     public void bulkDelete(List<Long> ids) {
         repository.deleteByIdIn(ids);
     }
+
+    @Override
+    public void clean(LocalDateTime threshold) {
+        List<Long> idsToDelete = repository.findIdsByDeletedAtBefore(threshold);
+        if (!idsToDelete.isEmpty()) {
+            repository.deleteByIdIn(idsToDelete);
+        }
+    }
 }
