@@ -1,15 +1,14 @@
 package com.back2basics.config;
 
-import com.back2basics.adapter.persistence.project.ProjectEntity;
 import com.back2basics.adapter.persistence.project.QProjectEntity;
 import com.back2basics.adapter.persistence.statistics.entity.DailyStatisticsEntity;
 import com.back2basics.adapter.persistence.statistics.repository.DailyStatisticsRepository;
+import com.back2basics.dto.ProjectStatusDto;
 import com.back2basics.global.config.CacheKeyProperties;
 import com.back2basics.project.model.ProjectStatus;
-import com.back2basics.project.port.out.ReadProjectPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -38,12 +37,10 @@ public class BatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final ReadProjectPort readProjectPort;
     private final DailyStatisticsRepository dailyStatisticsRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final CacheKeyProperties cacheKeyProperties;
-    private final EntityManagerFactory entityManagerFactory;
     private final JPAQueryFactory jpaQueryFactory;
 
     private static final int CHUNK_SIZE = 1000;
@@ -52,37 +49,61 @@ public class BatchConfig {
     @Bean
     public Job dailyStatisticsJob() {
         return new JobBuilder("dailyStatisticsJob", jobRepository)
-            .start(readProjectsAndAggregateInRedisStep())
+            .start(cleanupDailyStatisticsStep())
+            .next(readProjectsAndAggregateInRedisStep())
             .next(finalizeDailyStatisticsStep())
             .build();
     }
 
     @Bean
+    public Step cleanupDailyStatisticsStep() {
+        return new StepBuilder("cleanupDailyStatisticsStep", jobRepository)
+            .tasklet(cleanupDailyStatisticsTasklet(), transactionManager)
+            .build();
+    }
+
+    @Bean
+    public Tasklet cleanupDailyStatisticsTasklet() {
+        return (contribution, chunkContext) -> {
+            String todayKey = REDIS_AGGREGATION_KEY_PREFIX + LocalDate.now()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
+            log.info("====== 이전 집계 데이터 삭제, 키: {} ======", todayKey);
+            redisTemplate.delete(todayKey);
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
     public Step readProjectsAndAggregateInRedisStep() {
         return new StepBuilder("readProjectsAndAggregateInRedisStep", jobRepository)
-            .<ProjectEntity, ProjectStatus>chunk(CHUNK_SIZE, transactionManager)
-            .reader(projectEntityNoOffsetReader())
+            .<ProjectStatusDto, ProjectStatus>chunk(CHUNK_SIZE, transactionManager)
+            .reader(projectStatusDtoNoOffsetReader())
             .processor(projectStatusProcessor())
             .writer(redisAggregationWriter())
             .build();
     }
 
     @Bean
-    public QueryDslNoOffsetItemReader<ProjectEntity> projectEntityNoOffsetReader() {
+    public QueryDslNoOffsetItemReader<ProjectStatusDto> projectStatusDtoNoOffsetReader() {
+        QProjectEntity project = QProjectEntity.projectEntity;
         return new QueryDslNoOffsetItemReader<>(
             jpaQueryFactory,
             CHUNK_SIZE,
-            QProjectEntity.projectEntity.id,
-            ProjectEntity::getId,
+            project.id,
+            ProjectStatusDto::getId,
             queryFactory -> queryFactory
-                .selectFrom(QProjectEntity.projectEntity)
-                .where(QProjectEntity.projectEntity.isDeleted.isFalse())
+                .select(Projections.constructor(ProjectStatusDto.class,
+                    project.id,
+                    project.projectStatus
+                ))
+                .from(project)
+                .where(project.isDeleted.isFalse())
         );
     }
 
     @Bean
-    public ItemProcessor<ProjectEntity, ProjectStatus> projectStatusProcessor() {
-        return project -> project.getProjectStatus();
+    public ItemProcessor<ProjectStatusDto, ProjectStatus> projectStatusProcessor() {
+        return ProjectStatusDto::getProjectStatus;
     }
 
     @Bean
