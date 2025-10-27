@@ -5,10 +5,12 @@ import com.back2basics.history.model.HistoryType;
 import com.back2basics.user.model.Role;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Map;
 import lombok.Getter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -56,6 +58,10 @@ public class HistoryDocument {
     @Field("message")
     private String message;
 
+    @Indexed(expireAfterSeconds = 0)
+    @Field("expire_at")
+    private Date expireAt;
+
     public HistoryDocument(ObjectId id,
         HistoryType historyType,
         DomainType domainType,
@@ -66,7 +72,7 @@ public class HistoryDocument {
         String changerUsername,
         Role changerRole,
         Map<String, Object> before,
-        Map<String, Object> after, LocalDateTime createdAt, String message) {
+        Map<String, Object> after, LocalDateTime createdAt, String message, Date expireAt) {
         this.id = id;
         this.historyType = historyType;
         this.domainType = domainType;
@@ -80,6 +86,7 @@ public class HistoryDocument {
         this.after = after;
         this.createdAt = createdAt;
         this.message = message;
+        this.expireAt = expireAt;
     }
 
     public static HistoryDocument of(HistoryType historyType,
@@ -105,7 +112,8 @@ public class HistoryDocument {
             before,
             after,
             null,
-            message
+            message,
+            null
         );
     }
 }
